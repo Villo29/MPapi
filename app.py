@@ -1,13 +1,18 @@
 from flask import Flask, jsonify
+from flask_cors import CORS
 import pandas as pd
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
-
 app = Flask(__name__)
 
-file_path = 'last_monts_ride.csv'
+# Habilitar CORS
+CORS(app)
+
+# Cargar el dataset
+file_path = 'ruta/del/archivo.csv'  # Cambia esto a la ruta de tu archivo CSV
 df = pd.read_csv(file_path)
 
+# Preprocesar los datos
 df['create_at'] = pd.to_datetime(df['create_at'])
 df['create_at_date'] = df['create_at'].dt.date
 daily_counts = df.groupby('create_at_date').size()
@@ -22,24 +27,22 @@ forecast = sarima_model.get_forecast(steps=30)
 forecast_index = pd.date_range(daily_counts.index[-1] + pd.Timedelta(days=1), periods=30)
 forecast_values = forecast.predicted_mean
 
-# Convertir a un DataFrame para estructurar los resultados
 forecast_df = pd.DataFrame({
     'date': forecast_index,
     'predicted_count': forecast_values
 }).reset_index(drop=True)
 
-# Ruta para obtener datos históricos
+# Endpoint para datos históricos
 @app.route('/historical', methods=['GET'])
 def get_historical_data():
     historical_data = daily_counts.reset_index()
     historical_data.columns = ['date', 'count']
     return jsonify(historical_data.to_dict(orient='records'))
 
-# Ruta para obtener predicciones
+# Endpoint para predicciones
 @app.route('/forecast', methods=['GET'])
 def get_forecast_data():
     return jsonify(forecast_df.to_dict(orient='records'))
 
-# Ejecutar la aplicación
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
