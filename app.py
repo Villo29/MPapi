@@ -9,7 +9,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Cargar el dataset
-file_path = '/last_monts_ride'  # Cambia esto a la ruta de tu archivo CSV
+file_path = '/last_monts_ride.csv'  # Cambia esto a la ruta de tu archivo CSV
 df = pd.read_csv(file_path)
 
 # Preprocesar los datos
